@@ -29,7 +29,7 @@ remote.add_interface("AFK_players", {
 
 
 --TODO: fix text for crashes
-local function on_player_joined_game(event)
+function M.on_player_joined_game(event)
 	local player_index = event.player_index
 	local player = game.get_player(player_index)
 	if not (player and player.valid) then return end
@@ -37,7 +37,7 @@ local function on_player_joined_game(event)
 	mod_data.active_players[player_index] = player
 end
 
-local function on_player_left_game(event)
+function M.on_player_left_game(event)
 	local player_index = event.player_index
 	local player = game.get_player(player_index)
 	if not (player and player.valid) then return end
@@ -71,12 +71,13 @@ local time_text_data = {
 	target_offset = {0, -4}
 }
 ---@param player LuaPlayer
-local function create_AFK_text(player)
+M.create_AFK_text = function(player)
 	local player_index = player.index
+	mod_data.active_players[player_index] = nil
+	if mod_data.AFK_players_data[player_index] then return end
+
 	local character = player.character
 	local surface = player.surface
-
-	mod_data.active_players[player_index] = nil
 
 	text_data.surface = surface
 	text_data.target = character
@@ -123,15 +124,16 @@ end
 
 
 local function check_active_players()
+	local create_AFK_text = M.create_AFK_text
 	for player_index, player in pairs(mod_data.active_players) do
 		if player.valid == false then
 			mod_data.active_players[player_index] = nil
 		else
 			local character = player.character
-			if character and character.valid then
-				if player.afk_time > MIN_AFK_TIME_IN_TICKS then
-					create_AFK_text(player)
-				end
+			if character and character.valid and
+				player.afk_time > MIN_AFK_TIME_IN_TICKS
+			then
+				create_AFK_text(player)
 			end
 		end
 	end
@@ -159,6 +161,7 @@ end
 
 local function check_AFK_characters()
 	local AFK_players_data = mod_data.AFK_players_data
+	local create_AFK_text = M.create_AFK_text
 	for _, player_data in pairs(AFK_players_data) do
 		local player = player_data.player
 		if player.valid and player.character and player.character.valid then
@@ -213,8 +216,8 @@ M.on_nth_tick = {
 }
 
 M.events = {
-	[defines.events.on_player_joined_game] = on_player_joined_game,
-	[defines.events.on_player_left_game] = on_player_left_game
+	[defines.events.on_player_joined_game] = M.on_player_joined_game,
+	[defines.events.on_player_left_game] = M.on_player_left_game
 }
 
 

@@ -1,10 +1,10 @@
 {
     "name": "AFK_players",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "factorio_version": "1.1",
     "title": "AFK players",
     "author": "ZwerOxotnik",
-    "contact": "zweroxotnik@gmail.com, Discord:ZwerOxotnik#7117",
+    "contact": "zweroxotnik@gmail.com, Discord:ZwerOxotnik",
     "source": "",
     "homepage": "https://www.reddit.com/r/ZwerOxotnik/",
     "description": "Shows AFK time to all players.\nNew command: /afk-time [nickname]",
