@@ -1,0 +1,17 @@
+﻿---------------------------------------------------------------------------------------------------
+Version: 1.0.2
+Date: 2023-01-25
+  Features:
+    - Added new command: /afk-time [nickname]
+  Bugfixes:
+    - Fixed scenario
+---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 2023-01-22
+  Bugfixes:
+    - Changed text position, so nicknames will be visible now
+---------------------------------------------------------------------------------------------------
+Version: 1.0.0
+Date: 2023-01-22
+  Changes:
+    - First release for Factorio 1.1
