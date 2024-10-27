@@ -6,15 +6,13 @@ local M = {}
 
 
 --#region Global data
-local mod_data
+local __mod_data
 --#endregion
 
 
 --#region Constants
 local MIN_AFK_TIME_IN_TICKS = 60 * 10
-local draw_text = rendering.draw_text
 local floor = math.floor
-local is_rendering_valid = rendering.is_valid
 local ORANGE_COLOR = {254, 80, 0}
 --#endregion
 
@@ -34,20 +32,20 @@ function M.on_player_joined_game(event)
 	local player = game.get_player(player_index)
 	if not (player and player.valid) then return end
 
-	mod_data.active_players[player_index] = player
+	__mod_data.active_players[player_index] = player
 end
 
 function M.on_player_left_game(event)
 	local player_index = event.player_index
-	local player = game.get_player(player_index)
-	if not (player and player.valid) then return end
+	-- local player = game.get_player(player_index)
+	-- if not (player and player.valid) then return end
 
-	mod_data.active_players[player_index] = nil
-	mod_data.AFK_players_data[player_index] = nil
+	__mod_data.active_players[player_index]   = nil
+	__mod_data.AFK_players_data[player_index] = nil
 end
 
 
-local text_data = {
+local __text_data = {
 	surface = nil,
 	color = ORANGE_COLOR,
 	scale = 4,
@@ -58,13 +56,13 @@ local text_data = {
 	only_in_alt_mode = true,
 	target_offset = {0, -5.8}
 }
-local time_text = {"AFK_players.short_time", 0, 10} -- minutes, seconds
-local time_text_data = {
+local __time_text = {"AFK_players.short_time", 0, 10} -- minutes, seconds
+local __time_text_data = {
 	surface = nil,
 	color = ORANGE_COLOR,
 	scale = 3,
 	target = nil,
-	text = time_text,
+	text = __time_text,
 	visible = true,
 	alignment = "center",
 	only_in_alt_mode = true,
@@ -73,28 +71,28 @@ local time_text_data = {
 ---@param player LuaPlayer
 M.create_AFK_text = function(player)
 	local player_index = player.index
-	mod_data.active_players[player_index] = nil
-	if mod_data.AFK_players_data[player_index] then return end
+	__mod_data.active_players[player_index] = nil
+	if __mod_data.AFK_players_data[player_index] then return end
 
 	local character = player.character
 	local surface = player.surface
 
-	text_data.surface = surface
-	text_data.target = character
-	time_text_data.target = character
-	time_text_data.surface = surface
+	__text_data.surface = surface
+	__text_data.target = character
+	__time_text_data.target = character
+	__time_text_data.surface = surface
 
 	local afk_time = player.afk_time
 	local ticks_in_1_second = 60 * game.speed
 	local ticks_in_1_minute = 60 * ticks_in_1_second
 	local mins = floor(afk_time / ticks_in_1_minute)
 	local seconds = floor((afk_time - (mins * ticks_in_1_minute)) / ticks_in_1_second)
-	time_text[2] = mins
-	time_text[3] = seconds
+	__time_text[2] = mins
+	__time_text[3] = seconds
 
-	local id1 = draw_text(text_data)
-	local id2 = draw_text(time_text_data)
-	mod_data.AFK_players_data[player_index] = {
+	local id1 = rendering.draw_text(__text_data)
+	local id2 = rendering.draw_text(__time_text_data)
+	__mod_data.AFK_players_data[player_index] = {
 		player = player,
 		ID1 = id1,
 		ID2 = id2
@@ -107,27 +105,27 @@ local function update_AFK_text(player)
 	local character = player.character
 	local surface = player.surface
 
-	time_text_data.target = character
-	time_text_data.surface = surface
+	__time_text_data.target = character
+	__time_text_data.surface = surface
 
 	local afk_time = player.afk_time
 	local ticks_in_1_second = 60 * game.speed
 	local ticks_in_1_minute = 60 * ticks_in_1_second
 	local mins = floor(afk_time / ticks_in_1_minute)
 	local seconds = floor((afk_time - (mins * ticks_in_1_minute)) / ticks_in_1_second)
-	time_text[2] = mins
-	time_text[3] = seconds
+	__time_text[2] = mins
+	__time_text[3] = seconds
 
-	local id = mod_data.AFK_players_data[player_index].ID2
-	rendering.set_text(id, time_text)
+	local id = __mod_data.AFK_players_data[player_index].ID2
+	rendering.get_object_by_id(id).text = __time_text
 end
 
 
 local function check_active_players()
 	local create_AFK_text = M.create_AFK_text
-	for player_index, player in pairs(mod_data.active_players) do
+	for player_index, player in pairs(__mod_data.active_players) do
 		if player.valid == false then
-			mod_data.active_players[player_index] = nil
+			__mod_data.active_players[player_index] = nil
 		else
 			local character = player.character
 			if character and character.valid and
@@ -141,17 +139,20 @@ end
 
 
 local function check_AFK_players()
-	local AFK_players_data = mod_data.AFK_players_data
+	local AFK_players_data = __mod_data.AFK_players_data
+	local get_object_by_id = rendering.get_object_by_id
 	for player_index, player_data in pairs(AFK_players_data) do
 		local player = player_data.player
 		if not (player.valid and player.afk_time >= MIN_AFK_TIME_IN_TICKS) then
-			rendering.destroy(player_data.ID1)
-			rendering.destroy(player_data.ID2)
-			mod_data.active_players[player_index] = player
+			local rendered_object = get_object_by_id(player_data.ID1)
+			rendered_object.destroy()
+			rendered_object = get_object_by_id(player_data.ID2)
+			rendered_object.destroy()
+			__mod_data.active_players[player_index] = player
 			AFK_players_data[player_index] = nil
 		else
 			local character = player.character
-			if character and character.valid and is_rendering_valid(player_data.ID2) then
+			if character and character.valid and get_object_by_id(player_data.ID2).valid then
 				update_AFK_text(player)
 			end
 		end
@@ -160,12 +161,13 @@ end
 
 
 local function check_AFK_characters()
-	local AFK_players_data = mod_data.AFK_players_data
+	local AFK_players_data = __mod_data.AFK_players_data
 	local create_AFK_text = M.create_AFK_text
+	local get_object_by_id = rendering.get_object_by_id
 	for _, player_data in pairs(AFK_players_data) do
 		local player = player_data.player
 		if player.valid and player.character and player.character.valid then
-			if not is_rendering_valid(player_data.ID1) then
+			if not get_object_by_id(player_data.ID1).valid then
 				create_AFK_text(player_data.player)
 			end
 		end
@@ -176,25 +178,29 @@ end
 --#region Pre-game stage
 
 local function link_data()
-	mod_data = global.AFK_players_mod_data
+	__mod_data = storage.AFK_players_mod_data
 end
 
 local function update_global_data()
-	global.AFK_players_mod_data = global.AFK_players_mod_data or {}
-	mod_data = global.AFK_players_mod_data
+	storage.AFK_players_mod_data = storage.AFK_players_mod_data or {}
+	__mod_data = storage.AFK_players_mod_data
 
-	mod_data.active_players = {}
-	if mod_data.AFK_players_data then
-		for _, player_data in pairs(mod_data.AFK_players_data) do
-			rendering.destroy(player_data.ID1)
-			rendering.destroy(player_data.ID2)
+	__mod_data.active_players = {}
+
+	local get_object_by_id = rendering.get_object_by_id
+	if __mod_data.AFK_players_data then
+		for _, player_data in pairs(__mod_data.AFK_players_data) do
+			local rendered_object = get_object_by_id(player_data.ID1)
+			rendered_object.destroy()
+			rendered_object = get_object_by_id(player_data.ID2)
+			rendered_object.destroy()
 		end
 	end
-	mod_data.AFK_players_data = {}
+	__mod_data.AFK_players_data = {}
 
 	--Perhaps, I don't need it
 	for player_index, player in pairs(game.connected_players) do
-		mod_data.active_players[player_index] = player
+		__mod_data.active_players[player_index] = player
 	end
 
 	link_data()
