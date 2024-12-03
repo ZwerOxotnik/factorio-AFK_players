@@ -88,8 +88,8 @@ M.create_AFK_text = function(player)
 	__time_text[2] = mins
 	__time_text[3] = seconds
 
-	local id1 = rendering.draw_text(__text_data)
-	local id2 = rendering.draw_text(__time_text_data)
+	local id1 = rendering.draw_text(__text_data).id
+	local id2 = rendering.draw_text(__time_text_data).id
 	__mod_data.AFK_players_data[player_index] = {
 		player = player,
 		ID1 = id1,
@@ -175,11 +175,11 @@ end
 
 --#region Pre-game stage
 
-local function link_data()
+function M.link_data()
 	__mod_data = storage.AFK_players_mod_data
 end
 
-local function update_global_data()
+function M.update_global_data()
 	storage.AFK_players_mod_data = storage.AFK_players_mod_data or {}
 	__mod_data = storage.AFK_players_mod_data
 
@@ -188,6 +188,11 @@ local function update_global_data()
 	local get_object_by_id = rendering.get_object_by_id
 	if __mod_data.AFK_players_data then
 		for _, player_data in pairs(__mod_data.AFK_players_data) do
+			if type(player_data.ID1) == "userdata" then
+				player_data.ID1 = player_data.ID1.id
+				player_data.ID2 = player_data.ID2.id
+			end
+
 			local rendered_object = get_object_by_id(player_data.ID1)
 			rendered_object.destroy()
 			rendered_object = get_object_by_id(player_data.ID2)
@@ -201,13 +206,13 @@ local function update_global_data()
 		__mod_data.active_players[player_index] = player
 	end
 
-	link_data()
+	M.link_data()
 end
 
 
-M.on_init = update_global_data
-M.on_configuration_changed = update_global_data
-M.on_load = link_data
+M.on_init = M.update_global_data
+M.on_configuration_changed = M.on_configuration_changed
+M.on_load = M.link_data
 
 
 --#endregion
