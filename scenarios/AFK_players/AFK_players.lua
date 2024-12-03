@@ -49,24 +49,22 @@ local __text_data = {
 	surface = nil,
 	color = ORANGE_COLOR,
 	scale = 4,
-	target = nil,
+	target = {entity = nil, offset = {0, -5.8}},
 	text = {"AFK_players.AFK"},
 	visible = true,
 	alignment = "center",
-	only_in_alt_mode = true,
-	target_offset = {0, -5.8}
+	only_in_alt_mode = true
 }
 local __time_text = {"AFK_players.short_time", 0, 10} -- minutes, seconds
 local __time_text_data = {
 	surface = nil,
 	color = ORANGE_COLOR,
 	scale = 3,
-	target = nil,
+	target = {entity = nil, offset = {0, -4}},
 	text = __time_text,
 	visible = true,
 	alignment = "center",
-	only_in_alt_mode = true,
-	target_offset = {0, -4}
+	only_in_alt_mode = true
 }
 ---@param player LuaPlayer
 M.create_AFK_text = function(player)
@@ -77,10 +75,10 @@ M.create_AFK_text = function(player)
 	local character = player.character
 	local surface = player.surface
 
-	__text_data.surface = surface
-	__text_data.target = character
-	__time_text_data.target = character
+	__time_text_data.target.entity  = character
+	__text_data.target.entity       = character
 	__time_text_data.surface = surface
+	__text_data.surface      = surface
 
 	local afk_time = player.afk_time
 	local ticks_in_1_second = 60 * game.speed
@@ -105,7 +103,7 @@ local function update_AFK_text(player)
 	local character = player.character
 	local surface = player.surface
 
-	__time_text_data.target = character
+	__time_text_data.target.entity = character
 	__time_text_data.surface = surface
 
 	local afk_time = player.afk_time
