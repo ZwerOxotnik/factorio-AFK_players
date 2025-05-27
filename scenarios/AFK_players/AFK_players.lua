@@ -73,7 +73,7 @@ M.create_AFK_text = function(player)
 	if __mod_data.AFK_players_data[player_index] then return end
 
 	local character = player.character
-	local surface = player.surface
+	local surface   = character.surface
 
 	__time_text_data.target.entity  = character
 	__text_data.target.entity       = character
@@ -100,8 +100,8 @@ end
 ---@param player LuaPlayer
 local function update_AFK_text(player)
 	local player_index = player.index
-	local character = player.character
-	local surface = player.surface
+	local character    = player.character
+	local surface      = character.surface
 
 	__time_text_data.target.entity = character
 	__time_text_data.surface = surface
@@ -143,9 +143,13 @@ local function check_AFK_players()
 		local player = player_data.player
 		if not (player.valid and player.afk_time >= MIN_AFK_TIME_IN_TICKS) then
 			local rendered_object = get_object_by_id(player_data.ID1)
-			rendered_object.destroy()
+			if rendered_object and rendered_object.valid then
+				rendered_object.destroy()
+			end
 			rendered_object = get_object_by_id(player_data.ID2)
-			rendered_object.destroy()
+			if rendered_object and rendered_object.valid then
+				rendered_object.destroy()
+			end
 			__mod_data.active_players[player_index] = player
 			AFK_players_data[player_index] = nil
 		else
@@ -165,7 +169,8 @@ local function check_AFK_characters()
 	for _, player_data in pairs(AFK_players_data) do
 		local player = player_data.player
 		if player.valid and player.character and player.character.valid then
-			if not get_object_by_id(player_data.ID1).valid then
+			local rendered_object = get_object_by_id(player_data.ID1)
+			if rendered_object == nil or not rendered_object.valid then
 				create_AFK_text(player_data.player)
 			end
 		end
